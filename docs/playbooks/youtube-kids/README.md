@@ -171,7 +171,7 @@ The person spends about 30 minutes per episode. That is the cost of keeping the 
 | 2 | Slate | Atlas | `publish/slate-<week>.md` | Two episodes assigned with an ID and a due date |
 | 3 | Research card | Scout | `research/EP-xxx/research.md` | Learning goal, target phrase, three reference videos, parent concern, do-not-copy list |
 | 4 | Learning design | Bard | `scripts/EP-xxx/learning.md` | One measurable goal, vocabulary list of 8–12 words, one repeatable refrain |
-| 5 | Lyrics and script | Bard | `lyrics.md`, `script.md` | Original lyrics, 150–210 second script, no sentence over 12 words, no scary beat |
+| 5 | Lyrics and script | Bard | `lyrics.md`, `script.md` | Original lyrics, 180–270 second script, no sentence over 12 words, no scary beat |
 | 6 | Shot list | Bard | `shotlist.md` | Every scene has a duration, a character action, and a caption line |
 | 7 | Script review | Person | `scripts/EP-xxx/review.md` | Approved, or a written change list |
 | 8 | Voice and music | Forge | `assets/EP-xxx/vo/`, `music/` | No clipped words, loudness −14 LUFS integrated, music at least 18 dB under the voice |

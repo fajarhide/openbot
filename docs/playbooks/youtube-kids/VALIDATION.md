@@ -43,6 +43,13 @@ passed, what broke, and what changed because of it. The ebook errata is in
 | T18 | The art kit covers three characters, five expressions, six poses, six backgrounds | `artkit.py sheet`, read every sheet | **Pass after a fix** | See F10 |
 | T19 | The speaker's mouth moves only while the voice plays | Pixel difference of the mouth crop at four timestamps | **Pass** | Open vs closed 156,126; same state 3,762; closed vs tail 4,524 |
 | T20 | A cast entry with an unknown value fails loudly | `artkit.character` raises for an unknown character, expression, or pose | **Pass** | `ValueError` names the allowed set |
+| T21 | Scout turns a slate row into a sourced research card | Ran Scout's persona on EP-001, then spot-checked the card | **Pass** | Seven fields, 21 distinct links. CDC page reads five steps and 20 seconds, as cited. R1 views 85,015,521 on the card against 85,015,551 on the page |
+| T22 | Scout reports a conflict instead of hiding it | Read the unclear-items list | **Pass** | Nine items. Four were real defects of ours: see F12, F13, F16 |
+| T23 | Bard's script meets the mechanical rules | `check_shotlist.py` on EP-001 | **Pass** | 39 scenes, 195 s, no failures |
+| T24 | The checker can fail | Negative test with five planted faults | **Fail, then pass** | First run caught 4 of 5; the avoided word in a voice line slipped through. After the fix: 7 failures reported, real EP-001 still 0 |
+| T25 | The render matches the planned duration | Rendered EP-001 and read `qc.md` | **Fail, then pass** | 107.2 s against 195 s planned; after F14, 195.08 s |
+| T26 | A child can see the skill in the picture | Read a contact sheet of the render | **Fail** | No water, soap, or rubbing hands in any frame. See F16 |
+| T27 | The song is sung over a music bed | Listened for music: none was produced | **Fail** | The voice reads the lyrics as speech. See F17 |
 
 ## 3. Findings and the revision each one caused
 
@@ -158,28 +165,102 @@ speech matches a closed mouth.
 must judge in one viewing whether that holds a 3-minute episode for a 3-year-old. If it does not, the
 next step is a two-pose body bob and a slow push-in, not a different tool.
 
+### F12. Three personas cited a document the agents cannot read — fixed
+
+Scout's report quoted its own instruction: "README section 6", and noted that no such README exists in
+the channel folder. The same was true for Atlas, and for Verity's compliance gate ("README section 7").
+An agent reads only its own folder and the channel root. Verity would have been told to audit against a
+file it could not open, and a fail-closed rule cannot work like that.
+
+**Revision.** The gate and the scorecard are now copied into `compliance/gate.md` and
+`analytics/scorecard.md` by `tools/sync_playbook.py`, and the three personas point there.
+
+### F13. The numbers disagreed between documents — fixed
+
+Script length was 150–210 s in a persona, 180–270 s in the runbook, and 3:00–4:30 in the brand bible.
+Song length was 90–120 s in a persona and 60–90 s in the bible. Bard reported each conflict and picked a
+value that satisfied them all, which shows the persona was usable, but the sources should not need that.
+
+**Revision.** One value each: script 180–270 s, song 60–90 s, in the playbook, the personas, and the
+runbook.
+
+### F14. The renderer ignored the shot list's timing — fixed
+
+The shot list gave every scene 5 s, 195 s in total. The renderer measured the voice line and added 0.6 s,
+so the episode came out at 107 s: shorter than the 180 s minimum. Nothing flagged it.
+
+**Revision.** A scene may carry `seconds`, and the renderer takes the longer of that and voice plus 0.6 s.
+`check_shotlist.py` writes it. EP-001 now renders at 195.08 s.
+
+### F15. The first checker did not scan the voice lines — fixed
+
+A planted "Hurry up, come on" in a voice line passed. The checker read `lyrics.md`, `script.md` and
+`learning.md`, but the render uses the shot list's voice line, which can differ from them. Found only by
+feeding the checker a bad input on purpose.
+
+**Revision.** The checker scans the shot list's voice lines and captions too. Rule for the team: a check
+that has never failed is not yet a check.
+
+### F16. EP-001 cannot teach the skill it is about — open, with a stop rule
+
+The render shows the same bathroom in more than 30 of 39 scenes. Pip points at a sink from two steps
+away. There is no water, no soap, no foam, and no hands being rubbed. "Rub it slow" is a boy with his
+arms out. Bard listed all of this under "Kit gaps", as I had told it to continue and record the gap.
+Every mechanical check passed, so this is a failure that only a viewer sees.
+
+**Revision.** Two stop rules: Bard stops when the kit cannot draw the learning-goal action, and Atlas
+does not release a script to render while that action sits under "Kit gaps". The playbook's own bar was
+"a problem, an attempt, a resolution, not a slideshow". EP-001 meets none of the three visually.
+
+**Still open.** The kit needs props (soap, foam, a water stream, a towel) and a close-up of two hands
+rubbing, with a two-frame rub loop. That is the next build, and no episode about hand washing ships
+before it.
+
+### F17. A songs channel has no way to make a song — open, needs a decision
+
+The playbook assigns Forge "a music bed", but no tool in the pipeline produces one. `say` reads the lyrics
+as speech. EP-001's 90 s "song" is a narrator reciting rhyming lines over silence. This is the first time
+the gap was visible, because the earlier test had no song.
+
+**Not decided here.** The choices are a composer, a production-library track with a YouTube monetisation
+clause, or a generated track under a plan whose terms allow monetisation and whose Content ID position is
+known. Each has a licence risk that Verity must check. Pick one before episode 1.
+
+### F18. The agent test used subagents, not OpenBot agents — a limit on T21 to T23
+
+The personas ran through OpenCode subagents with the installed `AGENTS.md` as their instructions. That
+tests what the persona says and how a model follows it. It does not test OpenBot's routine scheduler,
+threads, or message delivery between agents.
+
 ## 4. What is still unproven
 
 | Item | Why | How to close it |
 | --- | --- | --- |
 | Real upload, including the kids attestation and the caption track | No Google Cloud OAuth desktop client | Create the client, run `upload_youtube.mjs auth`, then upload `EP-000` as a private draft |
 | A real voice | Needs a licensed voice, not `say` | Buy or record the voice; record one line; re-render |
-| Real art | The renderer draws placeholder shapes | Replace the scene builder before EP-001 |
+| Art that shows the skill | The kit has no props and no close-up (F16) | Build props and a hands close-up; re-render EP-001 |
+| A song | No music source (F17) | Choose composer, library, or licensed generator; record the licence |
+| Agent hand-offs inside OpenBot | The test used subagents (F18) | Run one episode with Atlas messaging the others in the dev profile |
+| Scout's other 14 claims | Only two were spot-checked | Verity re-reads the card before the episode is approved |
 | Retention, click-through, revenue | Needs published videos and 7 days of data | Follow the day-7 scorecard |
 | YouTube Kids acceptance | Needs a live channel | Read the Studio notifications after the first upload |
 
-Nothing in section 3 is a design failure. F1, F4, F5, and F6 were implementation faults that the
-first real run exposed. F3 and F7 were design faults in the playbook, and both are now corrected.
+F1, F4, F5, F6, F14 and F15 were implementation faults that a real run exposed. F3, F7, F12 and F13 were
+design faults in the playbook, and all four are corrected. F16 and F17 are open design gaps: the pipeline
+produces a video, but not yet one that a child could learn from or sing along with.
 
 ## 5. Verdict
 
 The playbook is applicable for a two-person-per-episode, two-episodes-a-week preschool channel,
-with two conditions:
+with four conditions. The first two are legal, the last two are about the product:
 
 1. Replace the prototype voice before the first upload. This is a licence condition, not a polish
    item.
 2. Decide the OAuth token question before the first month ends. Otherwise the upload routine stops
    silently.
+3. Build the props and the hands close-up before any episode about an action. EP-001 proved that a
+   passing shot list can still produce a video that shows nothing.
+4. Choose a music source before episode 1. A songs channel without a song is not the channel described.
 
 The automation boundary is right: everything up to a private draft is automatic, and publishing stays
 with a person. That boundary is what makes the made-for-kids attestation defensible.
