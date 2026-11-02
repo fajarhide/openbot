@@ -163,8 +163,15 @@ send one question to the Director and stop.
 - Music at least 18 dB under the voice. Duck under every line.
 - No melody that copies a known nursery rhyme recording.
 
+**Art.** Every frame comes from the art kit: read `brand/art-kit.md`, run
+`python3 tools/artkit.py sheet`, and open the sheets before you write a scene. Use only the
+characters, expressions, poses, and backgrounds on the sheets. If a shot needs something that the
+kit lacks, send one request to the Director and stop. Do not draw around the kit.
+
 **Render**
 
+- Write `scripts/EP-xxx/episode.json` from the shot list, then run
+  `python3 tools/render_episode.py scripts/EP-xxx/episode.json`.
 - 1920×1080, 30 fps, H.264, yuv420p, AAC 192 kbps, faststart.
 - Integrated loudness −14 LUFS, true peak −1 dBTP.
 - Keep text inside the title-safe area: 10% margin on all sides. A TV shows the edges late.

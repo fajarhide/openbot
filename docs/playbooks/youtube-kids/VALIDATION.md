@@ -39,6 +39,10 @@ passed, what broke, and what changed because of it. The ebook errata is in
 | T14 | The folder contract is enough for handoffs | Ran the pipeline across `scripts/`, `assets/`, `renders/`, `publish/` | **Pass after a fix** | Each artifact landed in its owner's folder |
 | T15 | Personas refer only to sections that exist | Compared `README section N` references against the headings | **Pass** | Sections 6 and 7 both exist |
 | T16 | The installed persona matches its source | Compared each `AGENTS.md` with `agents.md` after placeholder substitution | **Fail, then pass** | Forge had the old caption line; re-seeded, then 6/6 in sync |
+| T17 | An old episode spec still renders after the art change | Rendered the original EP-000 spec | **Pass** | Same 7.35 s, −14.27 LUFS, −1.22 dBTP |
+| T18 | The art kit covers three characters, five expressions, six poses, six backgrounds | `artkit.py sheet`, read every sheet | **Pass after a fix** | See F10 |
+| T19 | The speaker's mouth moves only while the voice plays | Pixel difference of the mouth crop at four timestamps | **Pass** | Open vs closed 156,126; same state 3,762; closed vs tail 4,524 |
+| T20 | A cast entry with an unknown value fails loudly | `artkit.character` raises for an unknown character, expression, or pose | **Pass** | `ValueError` names the allowed set |
 
 ## 3. Findings and the revision each one caused
 
@@ -129,6 +133,30 @@ An agent would have done the thing that had just been corrected.
 
 **Revision.** Re-ran the seeder; all six now match. The runbook says to re-seed after any persona
 edit, and the check is now mechanical: replace the placeholder, compare the text, count the matches.
+
+### F10. The first art kit failed its own layout checks — fixed by looking at the output
+
+Three faults, none of which a script could see. The review sheet cut off Pip's head. The character
+feet sat behind the caption pill, so the cast looked as if it stood in the text. And the first caption
+bar was a dark band with no margin from the bottom edge.
+
+**Revision.** Feet moved above the pill, the pill moved inside the title-safe area (y 868 to 964, limit
+972), and the sheet layout was recomputed. The lesson for Forge: open the PNG, do not trust the exit
+code. The Forge persona now says to read the kit sheets before writing a scene.
+
+### F11. The playbook's "no slideshow" rule cannot be met with still frames — partly fixed
+
+README section 6 says no episode is a slideshow. A still image per scene is a slideshow, however good
+the art is.
+
+**Revision.** The renderer now alternates the speaker's mouth between open and closed every 0.2 s while
+the voice line plays, and closes it after. Measured on EP-000: open versus closed differ by about
+156,000 grey levels in the mouth crop, the same state differs by about 3,700, and the tail frame after
+speech matches a closed mouth.
+
+**Still open.** Only the mouth moves. Characters do not walk, and there is no camera move. A person
+must judge in one viewing whether that holds a 3-minute episode for a 3-year-old. If it does not, the
+next step is a two-pose body bob and a slow push-in, not a different tool.
 
 ## 4. What is still unproven
 
