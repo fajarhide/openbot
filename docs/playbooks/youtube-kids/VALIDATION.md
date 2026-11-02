@@ -56,6 +56,7 @@ passed, what broke, and what changed because of it. The ebook errata is in
 | T31 | Limbs stay attached at the joints | Two 8 fps strips of consecutive frames (Poppy rubbing, Pip hands up) | **Pass** | No detached limb. Two defects noted in F22 |
 | T32 | Loudness is in range | `ebur128` on the final mux | **Pass after a fix** | First pass -16.0 LUFS; after gain and limiter -14.3 LUFS, -1.0 dBTP |
 | T33 | The Higgsfield key is accepted | Read-only call: real key on a fake request id, and a deliberately wrong key | **Pass** | 404 with the real key, 401 with the wrong one. No credit spent. The key is never printed |
+| T34 | The two Higgsfield pilot clips run | Submitted Genjutsu Light motion transfer and Seedance 2.5 image-to-video, 720p | **Blocked** | Both answered `403 not_enough_credits`. Uploads worked; nothing was charged. The account needs credit before any clip can run |
 
 ## 3. Findings and the revision each one caused
 
@@ -284,6 +285,13 @@ For a 195 s episode at 720p, before any retry: Seedance 2.5 about $90, Genjutsu 
 input seconds), at 480p about $40 and $20. The loss limit in README section 8 is USD 500 over six months, so
 Seedance at 720p spends it in about 5 episodes and Genjutsu Light in about 13. The stage cartoon costs no
 credit. Use the AI path for chosen shots, not for whole episodes, until a pilot shows it is worth the money.
+
+### F25. The Higgsfield account has no credit — blocked
+
+The key is valid and uploads work, but a submit returns `403 not_enough_credits`. The pilot costs about USD 3.91
+at 720p (A about 1.60, B about 2.31). Higgsfield says added funds expire after one year, so add only what the
+pilot and one retry need. `tools/higgsfield.py` is ready: `run <endpoint> <body.json> --out <file>`, with
+`--dry-run` to upload and read the estimate without any charge.
 
 ## 4. What is still unproven
 
