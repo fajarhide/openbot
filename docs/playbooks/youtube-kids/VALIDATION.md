@@ -57,6 +57,8 @@ passed, what broke, and what changed because of it. The ebook errata is in
 | T32 | Loudness is in range | `ebur128` on the final mux | **Pass after a fix** | First pass -16.0 LUFS; after gain and limiter -14.3 LUFS, -1.0 dBTP |
 | T33 | The Higgsfield key is accepted | Read-only call: real key on a fake request id, and a deliberately wrong key | **Pass** | 404 with the real key, 401 with the wrong one. No credit spent. The key is never printed |
 | T34 | The two Higgsfield pilot clips run | Submitted Genjutsu Light motion transfer and Seedance 2.5 image-to-video, 720p | **Blocked** | Both answered `403 not_enough_credits`. Uploads worked; nothing was charged. The account needs credit before any clip can run |
+| T35 | The rub is visible | Pixel change in the hand region, 21 samples 0.1 s apart | **Pass** | 12.75% of pixels per step around the hands, against 2.64% on an empty wall |
+| T36 | One loudness step serves both render paths | `finalize_audio.py` on three masters | **Pass after a fix** | -16.0 to -14.3, in range unchanged, -14.4 to -14.2; encoded once |
 
 ## 3. Findings and the revision each one caused
 
@@ -247,11 +249,16 @@ sheet the sink was empty. Found only by looking at the frames.
 **Revision.** A pair is placed by its joint alone, and its scale is a joint property. The basin was also
 shrunk, because at the first size it read as a bath.
 
-### F20. Loudness undershoots again on a short voice-over — fixed, and the fix is not shared yet
+### F20. Loudness undershoots on a short voice-over — fixed, with one shared step
 
-`loudnorm` in one pass landed at -16.0 LUFS on the 36 s chapter. This is the same fault as F1. The fix this
-time was a gain step and a limiter on the final mux (-14.3 LUFS). The motion path has no shared loudness step
-with `render_episode.py`, so the same fault will come back.
+`loudnorm` in one pass landed at -16.0 LUFS on the 36 s chapter, the same fault as F1. A gain step fixed it by
+hand, and the two render paths still had no common step.
+
+**Revision.** `tools/finalize_audio.py in.mp4 out.mp4` searches the gain by analysis only (a gain and a limiter,
+measured with `ebur128`), then encodes once. Tested on three masters: -16.0 reached -14.3 LUFS in three
+measurements; a file already in range was copied unchanged; the old artkit master moved from -14.4 to -14.2.
+The first version re-encoded the audio on every step and compared floats badly: it re-processed a file that was
+already at -14.3 and, in one intermediate step, reached +0.1 dBFS. Both were fixed before the tool was used.
 
 ### F21. "Dead seconds" measured area, not life — partly fixed
 
@@ -260,10 +267,25 @@ hands at a distance), which the pixel-share measure under-counts. The fix was a 
 stages, a small sway on idle hands, and two camera pushes on the quietest beats: 10 dead seconds became 2
 (seconds 7 and 8, where the hands wait at the sink). Read the number with that limit in mind.
 
-### F22. Two visual defects remain — open
+### F22. Two visual defects — fixed, and a third found on the way
 
-Poppy's rubbing is hard to see at that zoom. The goo drips are drawn as short yellow strokes and read as small
-sticks held in the hands. Neither is caught by a metric.
+Poppy's rubbing was hard to see, and the goo drips read as small sticks.
+
+**Revision.**
+- The goo is now a lumpy blob with a highlight and a tapered drop that stretches.
+- The drip lost its counter-rotation: with hands raised, the drop pointed up and read as a thumb. Each drip now
+  cancels the rotation of arm, forearm, and hand, so it always hangs down (a third defect, found on the contact
+  sheet, not by a metric).
+- Poppy's hands moved from the hips to the chest, with opposite-phase forearms, a slight squash of the body, and
+  two curved vibration marks on each side. The first marks were straight rays and read as whiskers.
+- The camera is closer for the rub.
+
+**Measured.** Over 21.0 to 22.0 s, sampled every 0.1 s, the share of pixels that changed per step: 12.75% around
+Poppy's hands, 4.40% on Pip (breath and blink), 2.64% on an empty wall (camera breath). The whole-video numbers
+barely moved (mean change 4.48% to 4.51%, held frames 16.6% to 15.1%), as expected from a local fix.
+
+**Still open.** Seconds 7 and 8 stay flagged as dead: the hands wait at the sink for the next line. A slow push
+on that beat would fix it; it is not in this render.
 
 ### F23. The Higgsfield catalogue has a model the public docs do not list — noted
 
