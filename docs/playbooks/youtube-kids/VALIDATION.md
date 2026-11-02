@@ -50,6 +50,12 @@ passed, what broke, and what changed because of it. The ebook errata is in
 | T25 | The render matches the planned duration | Rendered EP-001 and read `qc.md` | **Fail, then pass** | 107.2 s against 195 s planned; after F14, 195.08 s |
 | T26 | A child can see the skill in the picture | Read a contact sheet of the render | **Fail** | No water, soap, or rubbing hands in any frame. See F16 |
 | T27 | The song is sung over a music bed | Listened for music: none was produced | **Fail** | The voice reads the lyrics as speech. See F17 |
+| T28 | The stage cartoon (bang-motion) builds and runs | `build.py`, then 16 snapshots | **Pass** | No JS error; characters, goo, expressions, and background objects move |
+| T29 | The close-up stage shows the hands | Contact sheet of the sink stage | **Fail, then pass** | Hands were off-screen: position counted twice (F19). After the fix: hands, soap, water, foam visible |
+| T30 | The new render is more alive than the old | `frame_qa.py` on both masters | **Pass** | Held frames 99.4% to 16.6%; frozen time 144 s to 0 s; dead seconds 188 of 195 to 2 of 36; mean change 0.087% to 4.48% of pixels |
+| T31 | Limbs stay attached at the joints | Two 8 fps strips of consecutive frames (Poppy rubbing, Pip hands up) | **Pass** | No detached limb. Two defects noted in F22 |
+| T32 | Loudness is in range | `ebur128` on the final mux | **Pass after a fix** | First pass -16.0 LUFS; after gain and limiter -14.3 LUFS, -1.0 dBTP |
+| T33 | The Higgsfield key is accepted | Read-only call: real key on a fake request id, and a deliberately wrong key | **Pass** | 404 with the real key, 401 with the wrong one. No credit spent. The key is never printed |
 
 ## 3. Findings and the revision each one caused
 
@@ -232,13 +238,61 @@ The personas ran through OpenCode subagents with the installed `AGENTS.md` as th
 tests what the persona says and how a model follows it. It does not test OpenBot's routine scheduler,
 threads, or message delivery between agents.
 
+### F19. The close-up stage drew its hands off-screen — fixed
+
+Every hand pair was placed twice: once by the group transform and once by its joint. At the first contact
+sheet the sink was empty. Found only by looking at the frames.
+
+**Revision.** A pair is placed by its joint alone, and its scale is a joint property. The basin was also
+shrunk, because at the first size it read as a bath.
+
+### F20. Loudness undershoots again on a short voice-over — fixed, and the fix is not shared yet
+
+`loudnorm` in one pass landed at -16.0 LUFS on the 36 s chapter. This is the same fault as F1. The fix this
+time was a gain step and a limiter on the final mux (-14.3 LUFS). The motion path has no shared loudness step
+with `render_episode.py`, so the same fault will come back.
+
+### F21. "Dead seconds" measured area, not life — partly fixed
+
+The first motion render had 10 of 36 seconds flagged as dead. Most were a small movement (a pair of rubbing
+hands at a distance), which the pixel-share measure under-counts. The fix was a slow camera breath on both
+stages, a small sway on idle hands, and two camera pushes on the quietest beats: 10 dead seconds became 2
+(seconds 7 and 8, where the hands wait at the sink). Read the number with that limit in mind.
+
+### F22. Two visual defects remain — open
+
+Poppy's rubbing is hard to see at that zoom. The goo drips are drawn as short yellow strokes and read as small
+sticks held in the hands. Neither is caught by a metric.
+
+### F23. The Higgsfield catalogue has a model the public docs do not list — noted
+
+The API lists 91 models. "Genjutsu Light" (motion transfer and object swap, no restyle) is in the catalogue and
+not in the public docs. Prices come from the estimate endpoint, which does not charge:
+
+| Model | Price | Limits |
+| --- | --- | --- |
+| Seedance 2.5 image-to-video | $0.2056 / s at 480p, $0.4622 at 720p, $1.1372 at 1080p | 4 to 30 s per clip, optional last frame, audio can be off |
+| Genjutsu Light, motion transfer | $0.05 / s at 480p, $0.10 at 720p, $0.20 at 1080p, on output plus input seconds | Source trimmed to 15 s |
+| Genjutsu, restyle | $0.318 / s at 480p, $0.681 at 720p, $1.632 at 1080p, on input seconds | Source 4 to 30 s; styles are presets |
+
+Inputs must be public URLs. `POST /files/generate-upload-url` hosts a file and returns one. Outputs are
+deleted after 7 days.
+
+### F24. An AI render of a whole episode does not fit the loss limit — decision
+
+For a 195 s episode at 720p, before any retry: Seedance 2.5 about $90, Genjutsu Light about $39 (output plus
+input seconds), at 480p about $40 and $20. The loss limit in README section 8 is USD 500 over six months, so
+Seedance at 720p spends it in about 5 episodes and Genjutsu Light in about 13. The stage cartoon costs no
+credit. Use the AI path for chosen shots, not for whole episodes, until a pilot shows it is worth the money.
+
 ## 4. What is still unproven
 
 | Item | Why | How to close it |
 | --- | --- | --- |
 | Real upload, including the kids attestation and the caption track | No Google Cloud OAuth desktop client | Create the client, run `upload_youtube.mjs auth`, then upload `EP-000` as a private draft |
 | A real voice | Needs a licensed voice, not `say` | Buy or record the voice; record one line; re-render |
-| Art that shows the skill | The kit has no props and no close-up (F16) | Build props and a hands close-up; re-render EP-001 |
+| Art that shows the skill | Props and a close-up now exist in the stage cartoon, for chapter 1 only | Build chapters 2 to 4 of EP-001; fix F22; a person watches it once |
+| AI shots from Higgsfield | Quality, identity across clips, and licence terms are unknown | Pilot of two 8 s clips, see F23 and F24 |
 | A song | No music source (F17) | Choose composer, library, or licensed generator; record the licence |
 | Agent hand-offs inside OpenBot | The test used subagents (F18) | Run one episode with Atlas messaging the others in the dev profile |
 | Scout's other 14 claims | Only two were spot-checked | Verity re-reads the card before the episode is approved |

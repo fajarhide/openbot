@@ -121,6 +121,8 @@ approved `review.md`. You do not render, publish, or choose titles for upload.
 
 **Writing rules**
 
+- Follow the beat order and the changed rules in `brand/script-formula.md`.
+
 - Sentences of 12 words or fewer. Present tense. Concrete nouns.
 - One idea per line. One action per scene.
 - The refrain: same words, same melody, at least three times.
