@@ -66,6 +66,13 @@ passed, what broke, and what changed because of it. The ebook errata is in
 | T41 | The new art asked for by the storyboard exists | Contact sheets | **Pass** | Walk cycle, towel swing, pat with vibration marks at Pip's hands |
 | T42 | Chapters 0, 1, 4 join without a visible break | Frames either side of both joins | **Pass** | Rinse close-up leads to the cheer; Momo-and-Poppy shot leads to the wide shot |
 | T43 | The joined preview is alive and in range | `frame_qa.py` on the 56.97 s file | **Pass** | 0 frozen seconds, 1 of 56 dead, no black frame, no flash; -14.2 LUFS, -1.3 dBTP |
+| T44 | Chapters 2 and 3 build and run with the new hand art | Snapshots of every slot, then a full export | **Pass after two fixes** | Backs of hands with nails, thumb sparkle, fingertip nails; see F29 |
+| T45 | The song chapters are alive | `frame_qa.py` | **Pass** | Chapter 2: 0 of 45 dead seconds, 6.1% held; chapter 3: 0 of 40, 8.1% held; no frozen, black, or flash |
+| T46 | The music has a steady 96 BPM pulse locked to the 5 s slots | Waveform and spectrogram of the synthesized song | **Pass, structure only** | Regular beats, a stronger hit at each bar. **Nobody has listened to it**; see F31 |
+| T47 | The subtitles are clean | Parsed the SRT | **Pass** | 55 cues, 0 overlaps, shortest 0.96 s, fastest 15.1 characters a second |
+| T48 | The episode assembles and is in range | `assemble_episode.py`, `frame_qa.py` | **Pass** | 142.67 s (2:22.7), 1080p30, 3 of 142 seconds dead (6, 49, 135), no frozen, black, or flash; -14.3 LUFS, -1.3 dBTP |
+| T49 | The soft subtitle track is off by default in the MP4 | `ffprobe` on four ways of muxing | **Fail** | The MP4 muxer marked it default every time. The MKV can be off; see F30 |
+| T50 | The burned-in preview is readable and inside the safe area | Six frames of the preview | **Pass with a note** | The pill sits at y 868 to 964; in close-ups it covers a cuff |
 
 ## 3. Findings and the revision each one caused
 
@@ -364,6 +371,37 @@ that pointed Pip's arm at Poppy under a caption about Momo was caught on the she
   each short chapter has one dead second (chapter 0 second 6, between Poppy's hops and Momo's wave; chapter 4
   second 3, between the pat and the first insert). A slow push on those two beats would close it.
 
+### F29. Two defects in the new hand art, seen on a closer crop — fixed
+
+The thumb sparkle was drawn with a thin dark stroke inside the hand group, and the outline filter widened it into
+black wedges. The nails of the right hands were hidden under the foam.
+
+**Revision.** The sparkle is now a white stroke, so the filter gives it an ink border. The foam is reduced to 55%,
+50%, and 25% across S25 to S27. Thumbnails had hidden both faults; a crop at full size showed them.
+
+### F30. Subtitles: two limits of this toolchain, one decision
+
+This ffmpeg has no `subtitles` or `drawtext` filter (no libass or freetype), so burned-in text is drawn as PNG
+overlays from SVG. And its MP4 muxer marks the first subtitle track as default whatever `-disposition` says, in
+four variants tried.
+
+**Decision.** The MP4 master carries no subtitle track. `EP-001.en.srt` is the file to upload. An MKV carries a
+soft track that is off by default, and a third copy has the text drawn in, for review only.
+
+### F31. The music is built, not heard — a gate for a person
+
+`tools/music_synth.py` writes an original piece with numpy only (ukulele, glockenspiel, bass, kick, clap; 96 BPM;
+C major), with the tune and the chords written for this episode. The first spectrogram showed sharp
+high-frequency ticks on every beat, so the attack noise and the clap were softened. That change was judged from
+the picture, not by ear. A person must listen to the music, and to the voice, before anything is published (G4).
+The "sung" lines are chanted, because the voice is a macOS prototype (Junior and Kathy for the children) and
+cannot sing.
+
+### F32. The episode is built and is 2:22.7 — still below the 3:00 floor
+
+The decision on length (a verse on drying, or a lower floor for ages 2 to 3) is still open. The chapters and the
+assembly do not depend on it.
+
 ## 4. What is still unproven
 
 | Item | Why | How to close it |
@@ -372,7 +410,7 @@ that pointed Pip's arm at Poppy under a caption about Momo was caught on the she
 | A real voice | Needs a licensed voice, not `say` | Buy or record the voice; record one line; re-render |
 | Art that shows the skill | Props and a close-up now exist in the stage cartoon, for chapter 1 only | Build chapters 2 to 4 of EP-001; fix F22; a person watches it once |
 | AI shots from Higgsfield | Quality, identity across clips, and licence terms are unknown | Pilot of two 8 s clips, see F23 and F24 |
-| A song | No music source (F17) | Choose composer, library, or licensed generator; record the licence |
+| A song | The music is synthesized and original, but unheard (F31); the voice is a chant, not singing | A person listens; choose a licensed voice; decide on a singing voice or a composer |
 | Agent hand-offs inside OpenBot | The test used subagents (F18) | Run one episode with Atlas messaging the others in the dev profile |
 | Scout's other 14 claims | Only two were spot-checked | Verity re-reads the card before the episode is approved |
 | Retention, click-through, revenue | Needs published videos and 7 days of data | Follow the day-7 scorecard |
