@@ -73,6 +73,9 @@ passed, what broke, and what changed because of it. The ebook errata is in
 | T48 | The episode assembles and is in range | `assemble_episode.py`, `frame_qa.py` | **Pass** | 142.67 s (2:22.7), 1080p30, 3 of 142 seconds dead (6, 49, 135), no frozen, black, or flash; -14.3 LUFS, -1.3 dBTP |
 | T49 | The soft subtitle track is off by default in the MP4 | `ffprobe` on four ways of muxing | **Fail** | The MP4 muxer marked it default every time. The MKV can be off; see F30 |
 | T50 | The burned-in preview is readable and inside the safe area | Six frames of the preview | **Pass with a note** | The pill sits at y 868 to 964; in close-ups it covers a cuff |
+| T51 | `teardown` installs and its core code is safe to run | Read `capture.mjs`, `build.mjs`, `runtime.js`, `stage3d.js`, `paths.mjs`; `npm install --ignore-scripts` | **Pass** | No network calls, no postinstall; `rmSync` only on its own output folders. `sheet.mjs` and `util.js` were not read in full |
+| T52 | A 3D chapter 0 renders in the brand palette | Own three.js page (toon bands, ink hulls), `capture.mjs` at 1080p30, `frame_qa.py` | **Pass for the pilot** | 299 frames in 18 s; 0 of 9 dead seconds, 5.4% held, no flash. Cabinet, wall and floor match the palette to within 2 RGB steps after a 6% light cut |
+| T53 | The 3D pilot is a fair match for the 2D chapter | Same four times, 2D above 3D, from the final videos | **Partial** | Palette, outlines and dot faces hold. Pip's raised arm and the ink line at box edges are rougher than 2D; see F33 |
 
 ## 3. Findings and the revision each one caused
 
@@ -401,6 +404,32 @@ cannot sing.
 
 The decision on length (a verse on drying, or a lower floor for ages 2 to 3) is still open. The chapters and the
 assembly do not depend on it.
+
+### F33. Pilot: chapter 0 in 3D — feasible, one brand decision for a person
+
+`motion3d/EP-001-ch0/main.js` builds the bathroom, Pip, Poppy and Momo from primitives. Toon material with three
+bands and an inverted-hull ink line keep the flat look. It reads `timing.json` and `vo.wav` from the 2D chapter, so
+voice and timing are unchanged.
+
+| | 2D (GSAP SVG) | 3D pilot (three.js) |
+| --- | --- | --- |
+| Render time for 10 s | about 2.7 minutes (extrapolated from 10 min per 36.5 s) | 18 seconds |
+| Held frames | 31% | 5% |
+| New look | none | real depth, parallax, small cast shadows of light bands |
+| Roughness | none seen | ink line gaps at box edges; stiff raised arm; no hand detail |
+
+**Findings from the build.**
+1. The Playwright headless shell gets no WebGL context on this Mac. Chrome for Testing (the puppeteer copy) does,
+   through Metal. Set `CHROMIUM` to it.
+2. `Object3D.lookAt` takes world coordinates. Passing a local point turned the eyes, cheeks and mouth to face down.
+   The fix is `quaternion.setFromUnitVectors`.
+3. Toon lighting lifted every front surface about 6% above the palette. Measure pixels against the hex values and
+   scale the lights; do not judge by eye.
+4. `#include` in a shader string must sit on its own line.
+
+**Decision for a person.** 3D is a brand change: the bible says "no shading". The pilot shows three flat bands, so it
+stays flat in spirit, but it is a different look. Do not convert the other four chapters until a person chooses.
+A lower render cost is a gain; the 2D rig is already complete and passes QA.
 
 ## 4. What is still unproven
 
