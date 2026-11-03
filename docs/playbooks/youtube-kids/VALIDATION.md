@@ -60,6 +60,8 @@ passed, what broke, and what changed because of it. The ebook errata is in
 | T35 | The rub is visible | Pixel change in the hand region, 21 samples 0.1 s apart | **Pass** | 12.75% of pixels per step around the hands, against 2.64% on an empty wall |
 | T36 | One loudness step serves both render paths | `finalize_audio.py` on three masters | **Pass after a fix** | -16.0 to -14.3, in range unchanged, -14.4 to -14.2; encoded once |
 | T37 | A storyboard of the whole episode exists before it is built | 19 planned panels and 9 real frames, one sheet per chapter | **Pass** | `storyboard/sheet-ch0.png` to `sheet-ch4.png` in the channel folder |
+| T38 | The renovated stage renders and is richer without leaving the flat style | Snapshots, then a full export; before and after at six timestamps | **Pass** | Rug, perspective tiles, cabinet doors, plant, pump label, finger lines, cuffs, thumb. No gradient was added |
+| T39 | The renovated render is still alive and in range | `frame_qa.py` and `finalize_audio.py` on the new master | **Pass** | Dead seconds 2 of 36 to 0 of 36; held frames 15.1% to 10.0%; mean change 4.51% to 5.41%; -14.3 LUFS, -1.3 dBTP |
 
 ## 3. Findings and the revision each one caused
 
@@ -330,6 +332,20 @@ rundown covered chapter 1 only. Drawing the rest with the real rig showed:
 
 A caption that said a dollop landed on each hand, while the panel showed one pair, was caught on the second look
 at the sheet. The five decisions are listed in `storyboard/README.md`.
+
+### F27. A prettier storyboard than the build would hide the gap — decision, option A
+
+A sample sheet, drawn by an image model, looked richer than our renders: soft gradients, eye highlights, glossy
+surfaces. It also changed the dress and the hair of Poppy between panels, gave Momo a different face in each, and
+labelled redrawn panels as real frames. Matching it would have meant leaving the brand (flat, two dots and a
+mouth). The choice was to take its layout and the room detail, and keep the flat style.
+
+**Done.** The sheets use the sample layout (dark pill, divider, title, scene badge, status chips). The stage got
+wainscot, baseboard, window sill, perspective floor tiles, a rug, cabinet doors, a plant, a pump label, finger
+lines, a thumb, cuffs, a collar, and a dress hem. Chapter 1 was re-rendered and re-measured (T38, T39). A panel
+that pointed Pip's arm at Poppy under a caption about Momo was caught on the sheet and redrawn.
+
+**Not matched, on purpose.** Gradients and gloss. Adding them is a brand decision, not a polish step.
 
 ## 4. What is still unproven
 
