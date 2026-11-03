@@ -59,6 +59,7 @@ passed, what broke, and what changed because of it. The ebook errata is in
 | T34 | The two Higgsfield pilot clips run | Submitted Genjutsu Light motion transfer and Seedance 2.5 image-to-video, 720p | **Blocked** | Both answered `403 not_enough_credits`. Uploads worked; nothing was charged. The account needs credit before any clip can run |
 | T35 | The rub is visible | Pixel change in the hand region, 21 samples 0.1 s apart | **Pass** | 12.75% of pixels per step around the hands, against 2.64% on an empty wall |
 | T36 | One loudness step serves both render paths | `finalize_audio.py` on three masters | **Pass after a fix** | -16.0 to -14.3, in range unchanged, -14.4 to -14.2; encoded once |
+| T37 | A storyboard of the whole episode exists before it is built | 19 planned panels and 9 real frames, one sheet per chapter | **Pass** | `storyboard/sheet-ch0.png` to `sheet-ch4.png` in the channel folder |
 
 ## 3. Findings and the revision each one caused
 
@@ -314,6 +315,21 @@ The key is valid and uploads work, but a submit returns `403 not_enough_credits`
 at 720p (A about 1.60, B about 2.31). Higgsfield says added funds expire after one year, so add only what the
 pilot and one retry need. `tools/higgsfield.py` is ready: `run <endpoint> <body.json> --out <file>`, with
 `--dry-run` to upload and read the estimate without any charge.
+
+### F26. The first storyboard of the whole episode — four findings, none seen before building
+
+No storyboard existed before chapter 1 was built. The shot list was a text table for the old format, and the
+rundown covered chapter 1 only. Drawing the rest with the real rig showed:
+
+- **Length.** At voice pace for spoken scenes and 5 s for each of the 16 sung scenes, the episode is about 2:21,
+  below the 3:00 floor in the brand bible.
+- **Repetition.** Eight song scenes share one close-up (four hands, foam, basin). The call and answer should cut
+  back to the two children.
+- **Missing art.** The back of a hand with nails, a thumb pose, nail scrubbing, and a towel pat.
+- **A moved location.** The hello scenes were planned in a hallway; the stage has one room.
+
+A caption that said a dollop landed on each hand, while the panel showed one pair, was caught on the second look
+at the sheet. The five decisions are listed in `storyboard/README.md`.
 
 ## 4. What is still unproven
 
