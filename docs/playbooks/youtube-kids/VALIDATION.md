@@ -62,6 +62,10 @@ passed, what broke, and what changed because of it. The ebook errata is in
 | T37 | A storyboard of the whole episode exists before it is built | 19 planned panels and 9 real frames, one sheet per chapter | **Pass** | `storyboard/sheet-ch0.png` to `sheet-ch4.png` in the channel folder |
 | T38 | The renovated stage renders and is richer without leaving the flat style | Snapshots, then a full export; before and after at six timestamps | **Pass** | Rug, perspective tiles, cabinet doors, plant, pump label, finger lines, cuffs, thumb. No gradient was added |
 | T39 | The renovated render is still alive and in range | `frame_qa.py` and `finalize_audio.py` on the new master | **Pass** | Dead seconds 2 of 36 to 0 of 36; held frames 15.1% to 10.0%; mean change 4.51% to 5.41%; -14.3 LUFS, -1.3 dBTP |
+| T40 | Chapters 0 and 4 build from the shared stage and run | `build_chapter.py` for both, snapshots of key seconds | **Pass** | No JS error; walk-in, hops, tail wave, towel reach and pat, three sink inserts, wave and pull-back all visible |
+| T41 | The new art asked for by the storyboard exists | Contact sheets | **Pass** | Walk cycle, towel swing, pat with vibration marks at Pip's hands |
+| T42 | Chapters 0, 1, 4 join without a visible break | Frames either side of both joins | **Pass** | Rinse close-up leads to the cheer; Momo-and-Poppy shot leads to the wide shot |
+| T43 | The joined preview is alive and in range | `frame_qa.py` on the 56.97 s file | **Pass** | 0 frozen seconds, 1 of 56 dead, no black frame, no flash; -14.2 LUFS, -1.3 dBTP |
 
 ## 3. Findings and the revision each one caused
 
@@ -346,6 +350,19 @@ lines, a thumb, cuffs, a collar, and a dress hem. Chapter 1 was re-rendered and 
 that pointed Pip's arm at Poppy under a caption about Momo was caught on the sheet and redrawn.
 
 **Not matched, on purpose.** Gradients and gloss. Adding them is a brand decision, not a polish step.
+
+### F28. Chapters 0 and 4: what went wrong, what was avoided, and what is approximate
+
+- **Speaker map.** `make_chapter_audio.py` read every line as the narrator, because the pattern still had the
+  column bar in it. Found from its own printout; fixed.
+- **Avoided by design, not by a failing test.** A joint set with `tl.set` is not drawn until a tween updates it
+  (the F19 class of bug). The shared `put()` helper writes the joint and the DOM in one step. It has not been
+  exercised on a case where it failed.
+- **Approximate.** The three sink inserts of S38 are cut at fractions of the line length (20, 42, 60 and 80
+  percent), not at the real word times. The voice is a placeholder; retime when the voice is licensed.
+- **Livelier chapter 1 than the short ones.** Held frames are 10% in chapter 1 and 31% in chapters 0 and 4, and
+  each short chapter has one dead second (chapter 0 second 6, between Poppy's hops and Momo's wave; chapter 4
+  second 3, between the pat and the first insert). A slow push on those two beats would close it.
 
 ## 4. What is still unproven
 
